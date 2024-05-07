@@ -1,8 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'package:mmvip/Comp/Firebase_API.dart';
 import 'package:mmvip/Pages/Gift.dart';
 import 'package:mmvip/Pages/GiftDetails.dart';
 import 'package:mmvip/Pages/Holiday.dart';
@@ -15,12 +17,23 @@ import 'package:mmvip/Pages/ThLottery.dart';
 import 'package:mmvip/Pages/ThreeDHistory.dart';
 import 'package:mmvip/Pages/TwoDHistory.dart';
 import 'package:mmvip/Provider/locale.dart';
+import 'dart:io' show Platform;
 import 'package:mmvip/l10n/l10n.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Platform.isAndroid
+      ? await Firebase.initializeApp(
+          options: FirebaseOptions(
+              apiKey: "AIzaSyAGHF3-qedKRSfH14n5i8WfyRaD90VaYf0",
+              appId: "1:760132802717:android:826448c04150c2c7265c74",
+              messagingSenderId: "760132802717",
+              projectId: "mmvip-fc109"))
+      : await Firebase.initializeApp();
+  await FirebaseAPI().initNotifications();
   MobileAds.instance.initialize();
   await Hive.initFlutter();
   await Hive.openBox("TempLiveData");
