@@ -1,6 +1,6 @@
 import "dart:convert";
-
 import "package:flutter/material.dart";
+import "package:hive/hive.dart";
 import 'package:http/http.dart' as http;
 
 class API {
@@ -84,8 +84,58 @@ class API {
     return TWODXD;
   }
 
+  static Future<List> getSlide() async {
+    var response = await http.get(
+      Uri.parse('https://backend.mmvip.smartcodemm.com/api/slides'),
+    );
+    Map jsonData = jsonDecode(response.body);
+    return jsonData['data'];
+  }
+
   static Future<List> get3Dhis(int year) async {
     String url = "https://mmvip.smartcodemm.com/api/3d/history?year=$year";
+
+    print(url);
+    final response = await http.get(
+      Uri.parse(url),
+    );
+    return json.decode(response.body);
+  }
+
+  static Future<List> getPresents() async {
+    final url = Uri.parse('https://mmvip.smartcodemm.com/api/presents');
+
+    List data = [];
+
+    try {
+      http.Response res = await http.get(url);
+      print(res.body);
+      data.addAll(jsonDecode(res.body));
+    } catch (e) {
+      print(e);
+    }
+
+    return data;
+  }
+
+  static Future<Map> getEachPresent(id) async {
+    final url = Uri.parse('https://mmvip.smartcodemm.com/api/present/$id');
+
+    Map data = {};
+
+    try {
+      http.Response res = await http.get(url);
+      print(res.body);
+      data.addAll(jsonDecode(res.body));
+    } catch (e) {
+      print(e);
+    }
+
+    return data;
+  }
+
+  static Future<List> gettaiwan() async {
+    String url = "https://mmvip.smartcodemm.com/api/taiwan";
 
     print(url);
     final response = await http.get(

@@ -1,7 +1,12 @@
+import 'package:carousel_slider/carousel_options.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:hive/hive.dart';
+import 'package:mmvip/Comp/API.dart';
 import 'package:mmvip/Comp/Admob.dart';
 
 class Gift extends StatefulWidget {
@@ -14,7 +19,10 @@ class Gift extends StatefulWidget {
 bool isloading = true;
 
 class _GiftState extends State<Gift> {
+  Box presentBox = Hive.box("PresentData");
+  List data = [];
   BannerAd? banner;
+  List Slide = [];
 
   InterstitialAd? interAd;
 
@@ -58,12 +66,24 @@ class _GiftState extends State<Gift> {
     // TODO: implement initState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      Future.delayed(Duration(seconds: 2), () {
-        setState(() {
-          isloading = false;
-        });
+      Future.delayed(Duration.zero, () async {
+        Slide = await API.getSlide();
+        List PresentData = await API.getPresents();
+        if (mounted) {
+          setState(() {
+            data = PresentData;
+
+            isloading = false;
+          });
+        }
+
+        presentBox.put(
+          "presents",
+          PresentData,
+        );
       });
-      await createInterAd();
+      Future.delayed(Duration(seconds: 2), () {});
+      createInterAd();
     });
   }
 
@@ -90,6 +110,11 @@ class _GiftState extends State<Gift> {
     if (banner == null) {
       loadAds();
     }
+    if (data.isEmpty && presentBox.get("presents") != null) {
+      setState(() {
+        data.addAll(presentBox.get("presents"));
+      });
+    }
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.grey.shade800,
@@ -110,7 +135,6 @@ class _GiftState extends State<Gift> {
                 size: 30,
               ))
             : Container(
-                margin: EdgeInsets.all(15),
                 child: Column(
                   children: [
                     Expanded(
@@ -120,42 +144,48 @@ class _GiftState extends State<Gift> {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 15),
                               child: Container(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.3,
                                 width: double.infinity,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.blue),
+                                decoration:
+                                    BoxDecoration(color: Colors.transparent),
+                                child: CarouselSlider(
+                                    items: [
+                                      ...Slide.map((e) => Advertisement(
+                                            e: e,
+                                          ))
+                                    ],
+                                    options: CarouselOptions(
+                                      height: 200,
+                                      viewportFraction: 1,
+                                      initialPage: 0,
+                                      enableInfiniteScroll: true,
+                                      enlargeCenterPage: false,
+                                      reverse: false,
+                                      autoPlay: true,
+                                      autoPlayInterval: Duration(seconds: 5),
+                                      autoPlayAnimationDuration:
+                                          Duration(milliseconds: 800),
+                                      onPageChanged: (index, reason) {},
+                                      scrollDirection: Axis.horizontal,
+                                    )),
                               ),
                             ),
-                            Row(
-                              children: [
-                                GiftBox(),
-                                SizedBox(
-                                  width: 10,
-                                ),
-                                GiftBox(),
-                                SizedBox(
-                                  width: 10,
-                                ),
-                                GiftBox(),
-                              ],
-                            ),
-                            SizedBox(
-                              height: 15,
-                            ),
-                            Row(
-                              children: [
-                                GiftBox(),
-                                SizedBox(
-                                  width: 10,
-                                ),
-                                GiftBox(),
-                                SizedBox(
-                                  width: 10,
-                                ),
-                                GiftBox(),
-                              ],
+                            Container(
+                              margin: EdgeInsets.all(15),
+                              child: Wrap(
+                                runSpacing: 10,
+                                spacing: 10,
+                                children: [
+                                  if (data.isEmpty) CircularProgressIndicator(),
+                                  if (data.isNotEmpty)
+                                    ...data
+                                        .map((e) => GiftBox(
+                                              title: e["name"],
+                                              id: e["id"].toString(),
+                                              ad: e["ad_type"],
+                                            ))
+                                        .toList(),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -170,28 +200,315 @@ class _GiftState extends State<Gift> {
   }
 }
 
-class GiftBox extends StatelessWidget {
+class GiftBox extends StatefulWidget {
   const GiftBox({
+    required this.title,
+    required this.id,
+    required this.ad,
     super.key,
   });
 
+  final String title;
+  final String id;
+  final String ad;
+
+  @override
+  State<GiftBox> createState() => _GiftBoxState();
+}
+
+class _GiftBoxState extends State<GiftBox> {
+  bool isClicked = false;
+
+  InterstitialAd? interAd;
+  RewardedAd? rwAd;
+
+  void createInterAd() {
+    InterstitialAd.load(
+      adUnitId: "ca-app-pub-3940256099942544/1033173712",
+      // adUnitId: "ca-app-pub-7546836867022515/5610805044",
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) {
+        interAd = ad;
+      }, onAdFailedToLoad: (err) {
+        print(err);
+        print("dhahdah");
+        interAd = null;
+      }),
+    );
+  }
+
+  int createRwAd() {
+    int st = 1;
+
+    print("DDDDDDDDDDDDDDDDDDDdd");
+    RewardedAd.load(
+        // adUnitId: "ca-app-pub-7704805724466083/7102147391",
+        adUnitId: "ca-app-pub-3940256099942544/5224354917", // test
+        // adUnitId: "ca-app-pub-7546836867022515/4085136236",
+        request: const AdRequest(),
+        rewardedAdLoadCallback: RewardedAdLoadCallback(
+          onAdLoaded: (ad) {
+            print("ZZZZZZZZZZZZZZZZZZZZZ");
+            setState(() {
+              rwAd = ad;
+            });
+          },
+          onAdFailedToLoad: (error) {
+            print("PPPPPPPPPPPPPPPPPPPPp");
+            st = 0;
+            print(error);
+            setState(() {
+              rwAd = null;
+            });
+          },
+        ));
+    return st;
+  }
+
+  int showRwAd(Function obtainPresent) {
+    int status = 1;
+    if (rwAd != null) {
+      rwAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          int s = createRwAd();
+          status = s;
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          status = 0;
+          print("hahaha");
+          print(error);
+          ad.dispose();
+          int s = createRwAd();
+          status = s;
+        },
+      );
+      rwAd!.show(onUserEarnedReward: (ad, reward) {
+        obtainPresent();
+      });
+      rwAd = null;
+    }
+    return status;
+  }
+
+  void showInter(Function after) {
+    print(interAd);
+    if (interAd != null) {
+      interAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          createInterAd();
+          after();
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          print(error);
+          ad.dispose();
+          createInterAd();
+          after();
+        },
+      );
+      interAd!.show();
+      interAd = null;
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // WidgetsBinding.instance.addPostFrameCallback(
+    //   (timeStamp) async {
+
+    //   },
+    // );
+    Box presentBox = Hive.box("PresentData");
+    Future.delayed(Duration.zero, () async {
+      List PresentData = await API.getPresents();
+      presentBox.put(
+        "presents",
+        PresentData,
+      );
+    });
+
+    createInterAd();
+    createRwAd();
+  }
+
+  @override
+  void dispose() {
+    if (interAd != null) {
+      interAd!.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<Map> getPresentDetail() async {
+    Map dt = await API.getEachPresent(widget.id);
+    print(dt["content"]);
+    print("-----------------------------------------------");
+    return dt;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return GestureDetector(
+      onTap: () async {
+        setState(() {
+          isClicked = true;
+        });
+        Map p = await getPresentDetail();
+        if (p["ad_type"] == 'inter') {
+          if (interAd == null) {
+            print("dhahdah");
+            Navigator.of(context).pushNamed("/presentDetail",
+                arguments: [widget.title, p["type"], p["content"]]);
+          } else {
+            showInter(() {
+              Navigator.of(context).pushNamed("/presentDetail",
+                  arguments: [widget.title, p["type"], p["content"]]);
+            });
+          }
+        } else if (p['ad_type'] == 'reward') {
+          showDialog(
+              context: context,
+              builder: (context) {
+                return Dialog(
+                  backgroundColor: Colors.white,
+                  child: Container(
+                    height: 150,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.white),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Container(
+                              width: double.infinity,
+                              decoration:
+                                  BoxDecoration(color: Color(0xff053b61)),
+                              child: Center(
+                                child: Text(
+                                  'Congratulations !',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16),
+                                ),
+                              )),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Container(
+                              decoration: BoxDecoration(color: Colors.white),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Your Reward is ready to watch.',
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: Container(
+                                              width: 80,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  border: Border.all(
+                                                    color: Colors.black,
+                                                  )),
+                                              child: Center(
+                                                child: Text(
+                                                  'Cancle',
+                                                  style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 10,
+                                        ),
+                                        Expanded(
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              showRwAd(() {
+                                                Navigator.pop(context);
+                                                Navigator.of(context).pushNamed(
+                                                    "/presentDetail",
+                                                    arguments: [
+                                                      widget.title,
+                                                      p["type"],
+                                                      p["content"]
+                                                    ]);
+                                              });
+                                            },
+                                            child: Container(
+                                              width: 80,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  border: Border.all(
+                                                    color: Colors.black,
+                                                  )),
+                                              child: Center(
+                                                child: Text(
+                                                  'Watch Ad',
+                                                  style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              });
+        }
+      },
       child: Container(
         height: 120,
-        // width: 50,
+        width: 100,
         decoration: BoxDecoration(
             border: Border.all(color: Colors.white),
             borderRadius: BorderRadius.circular(10),
             color: Color(0xff053b61)),
         child: Center(
-          child: Text(
-            '2D တစ်ရက်စာ',
-            style: TextStyle(
-              color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              widget.title,
+              style: TextStyle(color: Colors.white, fontSize: 16),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
         ),
       ),
@@ -236,6 +553,31 @@ class _GiftAdsState extends State<GiftAds> {
                 child: AdWidget(ad: widget.banner!),
               ),
       ),
+    );
+  }
+}
+
+class Advertisement extends StatelessWidget {
+  const Advertisement({
+    required this.e,
+    super.key,
+  });
+
+  final Map e;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      e['image'],
+      fit: BoxFit.cover,
+      errorBuilder: (context, expection, stackTrace) {
+        return Center(
+            child: Image.asset(
+          'lib/Img/placeholderr.jpeg',
+          height: double.infinity,
+          fit: BoxFit.cover,
+        ));
+      },
     );
   }
 }

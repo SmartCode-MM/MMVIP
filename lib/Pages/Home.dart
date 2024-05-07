@@ -12,8 +12,11 @@ import 'package:mmvip/Comp/API.dart';
 import 'package:mmvip/Comp/Admob.dart';
 import 'package:intl/intl.dart';
 import 'package:mmvip/Comp/livehandler.dart';
+import 'package:mmvip/Provider/locale.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock/wakelock.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,10 +26,13 @@ class HomePage extends StatefulWidget {
 }
 
 bool isloading = true;
+String selectedlang = "mm";
+bool isActive = true;
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   BannerAd? banner;
   InterstitialAd? interAd;
+  bool islive = true;
 
   createInterAd() async {
     await InterstitialAd.load(
@@ -104,6 +110,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               now.weekday != 6 &&
               now.weekday != 7 &&
               !isHidden)) {
+        islive = true;
+
         if (!t!.isActive) {
           t = Timer.periodic(const Duration(seconds: 1), (timer) async {
             data = await API.getmainapi();
@@ -118,6 +126,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           });
         }
       } else {
+        islive = false;
+        setState(() {});
         // Future.delayed(Duration.zero, () async {
         //   dt2 = await API.get2DXD();
         //   TempLiveData.setTempLiveData(dt2);
@@ -263,7 +273,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               borderRadius: BorderRadius.only(
                   topRight: Radius.circular(0),
                   bottomRight: Radius.circular(0))),
-          width: MediaQuery.of(context).size.width * 0.65,
+          width: MediaQuery.of(context).size.width * 0.75,
           backgroundColor: Colors.white,
           child: Column(
             children: [
@@ -271,9 +281,26 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 child: Column(
                   children: [
                     Container(
-                      height: MediaQuery.of(context).size.height * 0.2,
-                      color: Color(0xff053b61),
-                    ),
+                        height: MediaQuery.of(context).size.height * 0.25,
+                        width: double.infinity,
+                        color: Color(0xff053b61),
+                        child: Column(
+                          children: [
+                            Image.asset(
+                              'lib/IMG/LOGO.png',
+                              height: 150,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: Text(
+                                'Version 2.0.1',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            )
+                          ],
+                        )),
                     Padding(
                       padding: const EdgeInsets.all(10),
                       child: Column(
@@ -302,7 +329,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                     width: 10,
                                   ),
                                   Text(
-                                    'Thailand Lottery',
+                                    AppLocalizations.of(context)!.thailottery,
                                     style: TextStyle(
                                         color: Color(0xff053b61),
                                         fontWeight: FontWeight.w500,
@@ -317,6 +344,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           ),
                           GestureDetector(
                             onTap: () {
+                              t!.cancel();
+                              setState(() {
+                                isHidden = true;
+                              });
                               if (interAd == null) {
                                 print(interAd);
                                 Navigator.pushNamed(context, '/taiwan');
@@ -330,16 +361,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                               padding: const EdgeInsets.symmetric(vertical: 3),
                               child: Row(
                                 children: [
-                                  Icon(
-                                    Icons.flag,
-                                    size: 30,
-                                    color: Color(0xff053b61),
+                                  Image.asset(
+                                    'lib/IMG/Taiwan.png',
+                                    height: 30,
                                   ),
                                   SizedBox(
                                     width: 10,
                                   ),
                                   Text(
-                                    'Taiwan',
+                                    AppLocalizations.of(context)!.taiwan,
                                     style: TextStyle(
                                         color: Color(0xff053b61),
                                         fontWeight: FontWeight.w500,
@@ -369,7 +399,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                     width: 10,
                                   ),
                                   Text(
-                                    'Set Holidays',
+                                    AppLocalizations.of(context)!.holiday,
                                     style: TextStyle(
                                         color: Color(0xff053b61),
                                         fontWeight: FontWeight.w500,
@@ -399,7 +429,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                     width: 10,
                                   ),
                                   Text(
-                                    'FB Page',
+                                    AppLocalizations.of(context)!.fb,
                                     style: TextStyle(
                                         color: Color(0xff053b61),
                                         fontWeight: FontWeight.w500,
@@ -428,7 +458,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                     width: 10,
                                   ),
                                   Text(
-                                    'Telegram',
+                                    AppLocalizations.of(context)!.telegram,
                                     style: TextStyle(
                                         color: Color(0xff053b61),
                                         fontWeight: FontWeight.w500,
@@ -456,7 +486,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                     width: 10,
                                   ),
                                   Text(
-                                    'Share',
+                                    AppLocalizations.of(context)!.share,
                                     style: TextStyle(
                                         color: Color(0xff053b61),
                                         fontWeight: FontWeight.w500,
@@ -477,14 +507,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                 children: [
                                   Icon(
                                     Icons.star,
-                                    size: 40,
+                                    size: 30,
                                     color: Color(0xff053b61),
                                   ),
                                   SizedBox(
                                     width: 10,
                                   ),
                                   Text(
-                                    'Rate App',
+                                    AppLocalizations.of(context)!.rateapp,
                                     style: TextStyle(
                                         color: Color(0xff053b61),
                                         fontWeight: FontWeight.w500,
@@ -512,7 +542,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                     width: 10,
                                   ),
                                   Text(
-                                    'Privacy Policy',
+                                    AppLocalizations.of(context)!.privacy,
                                     style: TextStyle(
                                         color: Color(0xff053b61),
                                         fontWeight: FontWeight.w500,
@@ -541,67 +571,89 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(5),
-                                bottomLeft: Radius.circular(5)),
-                            color: Color(0xff053b61),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 6),
-                            child: Row(
-                              children: [
-                                CountryFlag.fromCountryCode(
-                                  'MM',
-                                  height: 40,
-                                  width: 30,
-                                  borderRadius: 5,
-                                ),
-                                SizedBox(
-                                  width: 5,
-                                ),
-                                Text(
-                                  'Myanmar',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold),
-                                )
-                              ],
+                        child: GestureDetector(
+                          onTap: () {
+                            Provider.of<LocaleProvider>(context, listen: false)
+                                .setLocale(Locale('my'));
+                            setState(() {
+                              isActive = true;
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(5),
+                                  bottomLeft: Radius.circular(5)),
+                              color: isActive
+                                  ? Color(0xff053b61)
+                                  : Colors.blueGrey.shade300,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 6),
+                              child: Row(
+                                children: [
+                                  CountryFlag.fromCountryCode(
+                                    'MM',
+                                    height: 40,
+                                    width: 30,
+                                    borderRadius: 5,
+                                  ),
+                                  SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text(
+                                    'Myanmar',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold),
+                                  )
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                       Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(5),
-                                bottomRight: Radius.circular(5)),
-                            color: Colors.blueGrey.shade300,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 6),
-                            child: Row(
-                              children: [
-                                CountryFlag.fromCountryCode(
-                                  'GB',
-                                  height: 40,
-                                  width: 30,
-                                  borderRadius: 10,
-                                ),
-                                SizedBox(
-                                  width: 5,
-                                ),
-                                Text(
-                                  'English',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold),
-                                )
-                              ],
+                        child: GestureDetector(
+                          onTap: () {
+                            Provider.of<LocaleProvider>(context, listen: false)
+                                .setLocale(Locale('en'));
+                            setState(() {
+                              isActive = false;
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(5),
+                                  bottomRight: Radius.circular(5)),
+                              color: isActive
+                                  ? Colors.blueGrey.shade300
+                                  : Color(0xff053b61),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 6),
+                              child: Row(
+                                children: [
+                                  CountryFlag.fromCountryCode(
+                                    'GB',
+                                    height: 40,
+                                    width: 30,
+                                    borderRadius: 10,
+                                  ),
+                                  SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text(
+                                    'English',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold),
+                                  )
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -639,14 +691,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       child: Container(
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(10),
-                              bottomRight: Radius.circular(10),
+                              bottomLeft: Radius.circular(20),
+                              bottomRight: Radius.circular(20),
                             ),
-                            color: Color(0xff052b61)),
+                            color: Color(0xff053b61)),
                         child: Column(
                           children: [
                             SizedBox(
-                              height: 100,
+                              height: 120,
                               child: Center(
                                 child: (now.isAfter(t930) &&
                                             now.isBefore(t12) &&
@@ -662,7 +714,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                             data.isEmpty ? "" : data['live'],
                                             textStyle: TextStyle(
                                                 color: Colors.white,
-                                                fontSize: 80,
+                                                fontSize: 90,
                                                 fontWeight: FontWeight.bold),
                                           ),
                                         ],
@@ -672,22 +724,41 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                     : Text(
                                         data.isEmpty ? "" : data["live"],
                                         style: const TextStyle(
-                                            fontSize: 80,
+                                            fontSize: 90,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.white),
                                       ),
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.only(bottom: 20),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.check_circle_rounded,
-                                    size: 22,
-                                    color: Colors.green,
-                                  ),
+                                  islive
+                                      ? Container(
+                                          decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(5)),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 2, horizontal: 5),
+                                            child: Text(
+                                              "Live",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.check_circle_rounded,
+                                          size: 22,
+                                          color: Colors.green,
+                                        ),
                                   Text(
                                     " " + DateFormat("MMM d y").format(x) + " ",
                                     style: TextStyle(
@@ -754,6 +825,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             Expanded(
                               child: GestureDetector(
                                   onTap: () {
+                                    t!.cancel();
+                                    setState(() {
+                                      isHidden = true;
+                                    });
                                     if (interAd == null) {
                                       print(interAd);
                                       Navigator.pushNamed(context, '/taiwan');
@@ -784,6 +859,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             Expanded(
                               child: GestureDetector(
                                   onTap: () {
+                                    t!.cancel();
+                                    setState(() {
+                                      isHidden = true;
+                                    });
                                     Navigator.pushNamed(context, '/threeDhis');
                                   },
                                   child: Column(
@@ -807,13 +886,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             Expanded(
                               child: GestureDetector(
                                   onTap: () {
+                                    t!.cancel();
+                                    setState(() {
+                                      isHidden = true;
+                                    });
+
                                     Navigator.pushNamed(context, '/gift');
                                   },
                                   child: Column(
                                     children: [
                                       Image.asset(
-                                        'lib/IMG/money-bag.png',
-                                        height: 50,
+                                        'lib/IMG/giftbox.png',
+                                        height: 40,
                                       ),
                                     ],
                                   )),
@@ -821,7 +905,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             Expanded(
                               child: GestureDetector(
                                   onTap: () {
-                                    Navigator.pushNamed(context, '/twoDhis');
+                                    t!.cancel();
+                                    setState(() {
+                                      isHidden = true;
+                                    });
+                                    if (interAd == null) {
+                                      print(interAd);
+                                      Navigator.pushNamed(context, '/twoDhis');
+                                    } else {
+                                      showInter(() {
+                                        Navigator.pushNamed(
+                                            context, '/twoDhis');
+                                      });
+                                    }
                                   },
                                   child: Column(
                                     children: [
@@ -844,6 +940,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             Expanded(
                               child: GestureDetector(
                                   onTap: () {
+                                    t!.cancel();
+                                    setState(() {
+                                      isHidden = true;
+                                    });
                                     Navigator.pushNamed(context, '/livechat');
                                   },
                                   child: Column(

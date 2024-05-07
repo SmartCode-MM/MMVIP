@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:mmvip/Comp/API.dart';
 
 class Taiwan extends StatefulWidget {
   const Taiwan({super.key});
@@ -12,15 +13,20 @@ class Taiwan extends StatefulWidget {
 
 bool isloading = true;
 
+List taiwan = [];
+
 class _TaiwanState extends State<Taiwan> {
   @override
   void initState() {
-    Future.delayed(Duration(seconds: 2), () {
-      setState(() {
-        isloading = false;
-      });
-    });
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) async {
+        taiwan = await API.gettaiwan();
+        setState(() {
+          isloading = false;
+        });
+      },
+    );
   }
 
   @override
@@ -49,17 +55,10 @@ class _TaiwanState extends State<Taiwan> {
                 width: double.infinity,
                 child: SingleChildScrollView(
                   child: Column(
-                    children: [
-                      TaiwanCard(),
-                      TaiwanCard(),
-                      TaiwanCard(),
-                      TaiwanCard(),
-                      TaiwanCard(),
-                      TaiwanCard(),
-                      TaiwanCard(),
-                      TaiwanCard(),
-                      TaiwanCard(),
-                    ],
+                    children: taiwan
+                        .map((e) =>
+                            TaiwanCard(date: e["date"], number: e["number"]))
+                        .toList(),
                   ),
                 ),
               ),
@@ -70,8 +69,13 @@ class _TaiwanState extends State<Taiwan> {
 
 class TaiwanCard extends StatelessWidget {
   const TaiwanCard({
+    required this.date,
+    required this.number,
     super.key,
   });
+
+  final String date;
+  final String number;
 
   @override
   Widget build(BuildContext context) {

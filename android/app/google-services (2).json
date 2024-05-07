@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "760132802717",
+    "project_id": "mmvip-fc109",
+    "storage_bucket": "mmvip-fc109.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:760132802717:android:826448c04150c2c7265c74",
+        "android_client_info": {
+          "package_name": "com.example.mmvip"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGHF3-qedKRSfH14n5i8WfyRaD90VaYf0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
