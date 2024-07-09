@@ -8,6 +8,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive/hive.dart';
 import 'package:mmvip/Comp/API.dart';
 import 'package:mmvip/Comp/Admob.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Gift extends StatefulWidget {
   const Gift({super.key});
@@ -27,8 +28,11 @@ class _GiftState extends State<Gift> {
   InterstitialAd? interAd;
 
   createInterAd() async {
+    final box = await Hive.openBox('SettingData');
+    final settings = box.get('settings');
+    final adUnitId = settings['ads_unit_inter'];
     await InterstitialAd.load(
-      adUnitId: "ca-app-pub-3940256099942544/1033173712",
+      adUnitId: adUnitId,
       // adUnitId: "ca-app-pub-7546836867022515/5610805044",
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) {
@@ -98,11 +102,12 @@ class _GiftState extends State<Gift> {
     super.dispose();
   }
 
-  void loadAds() {
-    banner = MMVIPAdMob.getBanner(
+  void loadAds() async {
+    banner = await MMVIPAdMob.getBanner(
       context,
       height: 100,
-    )..load();
+    );
+    banner?.load();
   }
 
   @override
@@ -148,11 +153,35 @@ class _GiftState extends State<Gift> {
                                 decoration:
                                     BoxDecoration(color: Colors.transparent),
                                 child: CarouselSlider(
-                                    items: [
-                                      ...Slide.map((e) => Advertisement(
-                                            e: e,
-                                          ))
-                                    ],
+                                    items: Slide.map(
+                                      (e) => GestureDetector(
+                                        onTap: () async {
+                                          if (e['link'] != null) {
+                                            String url = e[
+                                                'link']; // Assuming e['link'] is your URL
+                                            if (await canLaunch(url)) {
+                                              await launch(url);
+                                            } else {
+                                              throw 'Could not launch $url';
+                                            }
+                                          }
+                                        },
+                                        child: Image.network(
+                                          e['image'],
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, exception, stackTrace) {
+                                            return Center(
+                                              child: Image.asset(
+                                                'lib/Img/placeholderr.jpeg',
+                                                height: double.infinity,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ).toList(),
                                     options: CarouselOptions(
                                       height: 200,
                                       viewportFraction: 1,
@@ -179,7 +208,10 @@ class _GiftState extends State<Gift> {
                                   if (data.isNotEmpty)
                                     ...data
                                         .map((e) => GiftBox(
-                                              title: e["name"],
+                                              title: e["name"]
+                                                  .toString()
+                                                  .split('\n')
+                                                  .join('\n'),
                                               id: e["id"].toString(),
                                               ad: e["ad_type"],
                                             ))
@@ -222,9 +254,13 @@ class _GiftBoxState extends State<GiftBox> {
   InterstitialAd? interAd;
   RewardedAd? rwAd;
 
-  void createInterAd() {
+  void createInterAd() async {
+    final box = await Hive.openBox('SettingData');
+    final settings = box.get('settings');
+    final adUnitId = settings['ads_unit_inter'];
+
     InterstitialAd.load(
-      adUnitId: "ca-app-pub-3940256099942544/1033173712",
+      adUnitId: adUnitId,
       // adUnitId: "ca-app-pub-7546836867022515/5610805044",
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) {
@@ -237,32 +273,31 @@ class _GiftBoxState extends State<GiftBox> {
     );
   }
 
-  int createRwAd() {
-    int st = 1;
+  Future<void> createRwAd() async {
+    final box = await Hive.openBox('SettingData');
+    final settings = box.get('settings');
+    final adUnitId = settings['ads_unit_reward'];
 
     print("DDDDDDDDDDDDDDDDDDDdd");
     RewardedAd.load(
-        // adUnitId: "ca-app-pub-7704805724466083/7102147391",
-        adUnitId: "ca-app-pub-3940256099942544/5224354917", // test
-        // adUnitId: "ca-app-pub-7546836867022515/4085136236",
-        request: const AdRequest(),
-        rewardedAdLoadCallback: RewardedAdLoadCallback(
-          onAdLoaded: (ad) {
-            print("ZZZZZZZZZZZZZZZZZZZZZ");
-            setState(() {
-              rwAd = ad;
-            });
-          },
-          onAdFailedToLoad: (error) {
-            print("PPPPPPPPPPPPPPPPPPPPp");
-            st = 0;
-            print(error);
-            setState(() {
-              rwAd = null;
-            });
-          },
-        ));
-    return st;
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          print("ZZZZZZZZZZZZZZZZZZZZZ");
+          setState(() {
+            rwAd = ad;
+          });
+        },
+        onAdFailedToLoad: (error) {
+          print("PPPPPPPPPPPPPPPPPPPPp");
+          print(error);
+          setState(() {
+            rwAd = null;
+          });
+        },
+      ),
+    );
   }
 
   int showRwAd(Function obtainPresent) {
@@ -271,22 +306,21 @@ class _GiftBoxState extends State<GiftBox> {
       rwAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
           ad.dispose();
-          int s = createRwAd();
-          status = s;
+          createRwAd(); // Load a new ad for next show
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
           status = 0;
-          print("hahaha");
-          print(error);
+          print("Failed to show ad: $error");
           ad.dispose();
-          int s = createRwAd();
-          status = s;
+          createRwAd(); // Load a new ad for next show
         },
       );
       rwAd!.show(onUserEarnedReward: (ad, reward) {
         obtainPresent();
       });
-      rwAd = null;
+      rwAd = null; // Reset ad instance after showing
+    } else {
+      status = 0; // Set status to 0 if rwAd is null
     }
     return status;
   }
@@ -539,7 +573,7 @@ class _GiftAdsState extends State<GiftAds> {
             ? Container(
                 decoration:
                     BoxDecoration(borderRadius: BorderRadius.circular(10)),
-                height: 200,
+                height: 70,
                 child: Center(
                   child: Text('Google Ads Banner'),
                 ),
@@ -549,7 +583,7 @@ class _GiftAdsState extends State<GiftAds> {
                   border: Border.all(width: 1, color: Colors.white),
                 ),
                 width: double.infinity,
-                height: 100,
+                height: 70,
                 child: AdWidget(ad: widget.banner!),
               ),
       ),
@@ -559,24 +593,33 @@ class _GiftAdsState extends State<GiftAds> {
 
 class Advertisement extends StatelessWidget {
   const Advertisement({
-    required this.e,
-    super.key,
-  });
+    required this.slides,
+    Key? key,
+  }) : super(key: key);
 
-  final Map e;
+  final List<Map<String, dynamic>> slides;
+
+  // Function to fetch slide data from API
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      e['image'],
-      fit: BoxFit.cover,
-      errorBuilder: (context, expection, stackTrace) {
-        return Center(
-            child: Image.asset(
-          'lib/Img/placeholderr.jpeg',
-          height: double.infinity,
+    return ListView.builder(
+      itemCount: slides.length,
+      itemBuilder: (context, index) {
+        Map<String, dynamic> slide = slides[index];
+        return Image.network(
+          slide['image'],
           fit: BoxFit.cover,
-        ));
+          errorBuilder: (context, exception, stackTrace) {
+            return Center(
+              child: Image.asset(
+                'lib/Img/placeholderr.jpeg',
+                height: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            );
+          },
+        );
       },
     );
   }

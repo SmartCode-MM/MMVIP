@@ -4,12 +4,17 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'package:mmvip/Comp/API.dart';
 import 'package:mmvip/Comp/Firebase_API.dart';
+import 'package:mmvip/Comp/firebaseURL.dart';
+
+import 'package:mmvip/Pages/ChatDetails.dart';
 import 'package:mmvip/Pages/Gift.dart';
 import 'package:mmvip/Pages/GiftDetails.dart';
 import 'package:mmvip/Pages/Holiday.dart';
 import 'package:mmvip/Pages/Home.dart';
 import 'package:mmvip/Pages/LiveChat.dart';
+import 'package:mmvip/Pages/Privacy.dart';
 import 'package:mmvip/Pages/SearchPrize.dart';
 import 'package:mmvip/Pages/Splash.dart';
 import 'package:mmvip/Pages/Taiwan.dart';
@@ -38,7 +43,16 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox("TempLiveData");
   await Hive.openBox('PresentData');
+  await Hive.openBox('Slides');
+  Box settingBox = await Hive.openBox("SettingData");
   await Hive.openBox('Language');
+  Box miscbox = await Hive.openBox("MiscBox");
+  await FireMSG().initNoti();
+  Map settingData = await API.getSettingDatas();
+  settingBox.put(
+    "settings",
+    settingData,
+  );
   if (Hive.box("Language").get('lang') == null) {
     Hive.box("Language").put('lang', 'en');
   }
@@ -56,37 +70,68 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         final provider = Provider.of<LocaleProvider>(context);
         return MaterialApp(
-          title: 'MMVIP',
-          theme: ThemeData(
-            useMaterial3: true,
-          ),
-          locale: provider.locale,
-          supportedLocales: L10n.all,
-          localizationsDelegates: [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
-          initialRoute: "/splash",
-          routes: {
-            "/splash": (context) => const Splash(),
-            "/home": (context) => const HomePage(),
-            "/taiwan": (context) => const Taiwan(),
-            "/threeDhis": (context) => const ThreeDHistory(),
-            "/searchprize": (context) => const SearchPrize(),
-            "/twoDhis": (context) => const TwoDHistory(),
-            "/gift": (context) => const Gift(),
-            "/livechat": (context) => const LiveChat(),
-            "/holiday": (context) => const Holiday(),
-            "/thailand": (context) => const THLottery(),
-            "/presentDetail": (context) => const PresentDetail(),
+            title: 'MMVIP',
+            theme: ThemeData(
+              useMaterial3: true,
+            ),
+            locale: provider.locale,
+            supportedLocales: L10n.all,
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+            ],
+            initialRoute: "/splash",
+            routes: {
+              "/splash": (context) => const Splash(),
+              "/home": (context) => const HomePage(),
+              "/taiwan": (context) => const Taiwan(),
+              "/threeDhis": (context) => const ThreeDHistory(),
+              "/searchprize": (context) => const SearchPrize(),
+              "/twoDhis": (context) => const TwoDHistory(),
+              "/gift": (context) => const Gift(),
+              "/livechat": (context) => const LiveChat(
+                    // userName: 'defaultUserName',
+                    //     userProfilePic: 'defaultProfilePic',
+                    liveData: 'defaultLiveData',
+                    number1: 'defaultNumber1',
+                    set1: 'defaultSet1',
+                    value1: 'defaultValue1',
+                    number2: 'defaultNumber2',
+                    set2: 'defaultSet2',
+                    value2: 'defaultValue2',
+                  ),
+              "/holiday": (context) => const Holiday(),
 
-            // "/2Ddetailspage": (context) => const TwoDDetails(),
+              "/thailand": (context) => const THLottery(),
+              "/presentDetail": (context) => const PresentDetail(),
+              "/privacy": (context) => const Privacy(),
 
-            // "/2Devening": (context) => const TwoDevening(),
-          },
-        );
+              // "/2Ddetailspage": (context) => const TwoDDetails(),
+
+              // "/2Devening": (context) => const TwoDevening(),
+            },
+            onGenerateRoute: (settings) {
+              if (settings.name == '/chatdetails') {
+                final args = settings.arguments as Map<String, dynamic>;
+                return MaterialPageRoute(
+                  builder: (context) {
+                    return ChatDetails(
+                      userName: args['userName'],
+                      userProfilePic: args['userProfilePic'],
+                      liveData: args['liveData'],
+                      number1: args['number1'],
+                      set1: args['set1'],
+                      value1: args['value1'],
+                      number2: args['number2'],
+                      set2: args['set2'],
+                      value2: args['value2'],
+                    );
+                  },
+                );
+              }
+            });
       },
     );
   }

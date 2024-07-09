@@ -4,7 +4,7 @@ import "package:hive/hive.dart";
 import 'package:http/http.dart' as http;
 
 class API {
-  static final baseURL = "https://app.aungthuya2d3d.link";
+  static final baseURL = "https://mmvip.smartcodemm.com";
 
   static Future<List> getHoliday() async {
     var response = await http.get(Uri.parse('$baseURL/api/holiday'));
@@ -34,8 +34,11 @@ class API {
     String SET;
     String VALUE;
 
-    var response =
-        await http.get(Uri.parse('http://newthaivip.com/main/api.php'));
+    var SettingAPI = Hive.box("SettingData").get("settings");
+    var response = await http.get(Uri.parse(SettingAPI["api"] == null
+        ? "http://2d3d.link/main/api.php"
+        : SettingAPI["api"]));
+    print(SettingAPI);
 
     List jsonData = jsonDecode(response.body);
     if ((now.isBefore(t2))) {
@@ -79,17 +82,52 @@ class API {
           "number": jsonData[0]["430"],
         }
       ],
+      "updatetime": jsonData[0]["updatetime"],
     };
     print("shah" + TWODXD.toString());
     return TWODXD;
   }
 
-  static Future<List> getSlide() async {
+  static Future<Map> getSettingDatas() async {
+    final url = Uri.parse("https://mmvip.smartcodemm.com/api/setting");
+
+    Map data = {};
+
+    try {
+      http.Response res = await http.get(url);
+      print('setting..............');
+      print(res);
+      data.addAll(jsonDecode(res.body)[0]);
+    } catch (e) {
+      print(e);
+    }
+
+    return data;
+  }
+
+  static Future<List<Map<String, dynamic>>> getSlide() async {
     var response = await http.get(
-      Uri.parse('https://backend.mmvip.smartcodemm.com/api/slides'),
+      Uri.parse('https://mmvip.smartcodemm.com/api/slides'),
     );
-    Map jsonData = jsonDecode(response.body);
-    return jsonData['data'];
+    return json.decode(response.body).cast<Map<String, dynamic>>();
+  }
+
+  static Future<void> postToken(token) async {
+    final url =
+        Uri.parse("https://backend.mmvip.smartcodemm.com/api/device_token");
+
+    try {
+      http.Response res = await http.post(
+        url,
+        body: {
+          "device_token": token,
+        },
+      );
+      print(res.body);
+      print("...........................................................");
+    } catch (e) {
+      print(e);
+    }
   }
 
   static Future<List> get3Dhis(int year) async {

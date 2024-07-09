@@ -57,11 +57,12 @@ class _TwoDHistoryState extends State<TwoDHistory> {
 
   BannerAd? banner;
 
-  void loadAds() {
-    banner = MMVIPAdMob.getBanner(
+  void loadAds() async {
+    banner = await MMVIPAdMob.getBanner(
       context,
       height: 100,
-    )..load();
+    );
+    banner?.load();
   }
 
   @override
@@ -952,66 +953,73 @@ class TwoDHisCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return Dialog(
-              insetPadding: EdgeInsets.all(10),
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.white),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.pop(context);
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(100),
-                                    border: Border.all(color: Colors.black)),
-                                child: Icon(
-                                  Icons.close_sharp,
-                                  color: Colors.black,
+        if (TwooD1201 != null &&
+            TwooD1201['set'] != null &&
+            TwooD1201['value'] != null &&
+            TwooD0430 != null &&
+            TwooD0430['set'] != null &&
+            TwooD0430['value'] != null) {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return Dialog(
+                insetPadding: EdgeInsets.all(10),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.white),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(100),
+                                      border: Border.all(color: Colors.black)),
+                                  child: Icon(
+                                    Icons.close_sharp,
+                                    color: Colors.black,
+                                  ),
                                 ),
-                              ),
-                            )
-                          ],
-                        ),
-                        datetime(
-                          date: date,
-                          day: day,
-                        ),
-                        twodcard1201(
-                          TwooD1201: TwooD1201,
-                        ),
-                        twodcard430(
-                          TwooD0430: TwooD0430,
-                        ),
-                        modernint(
-                          internet200: internet200,
-                          internet930: internet930,
-                          modern200: modern200,
-                          modern930: modern930,
-                        ),
-                      ],
+                              )
+                            ],
+                          ),
+                          datetime(
+                            date: date,
+                            day: day,
+                          ),
+                          twodcard1201(
+                            TwooD1201: TwooD1201,
+                          ),
+                          twodcard430(
+                            TwooD0430: TwooD0430,
+                          ),
+                          modernint(
+                            internet200: internet200,
+                            internet930: internet930,
+                            modern200: modern200,
+                            modern930: modern930,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
-        );
+              );
+            },
+          );
+        }
       },
       child: Container(
         width: MediaQuery.of(context).size.width * 0.18,
@@ -1079,7 +1087,7 @@ class _TwoDAdsState extends State<TwoDAds> {
             ? Container(
                 decoration:
                     BoxDecoration(borderRadius: BorderRadius.circular(10)),
-                height: 200,
+                height: 150,
                 child: Center(
                   child: Text('Google Ads Banner'),
                 ),

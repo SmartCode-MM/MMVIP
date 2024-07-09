@@ -14,8 +14,12 @@ class _PresentDetailState extends State<PresentDetail> {
   var _con;
   BannerAd? banner;
 
-  void loadAds() {
-    banner = MMVIPAdMob.getBanner(context)..load();
+  void loadAds() async {
+    banner = await MMVIPAdMob.getBanner(
+      context,
+      height: 100,
+    );
+    banner?.load();
   }
 
   @override
@@ -100,7 +104,7 @@ class _PresentDetailState extends State<PresentDetail> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
               ),
-              height: 88,
+              height: 70,
               child: Center(child: Text("Google Ads Banner")),
             )
           : Container(
@@ -108,7 +112,7 @@ class _PresentDetailState extends State<PresentDetail> {
                 border: Border.all(width: 1, color: Colors.transparent),
               ),
               width: double.infinity,
-              height: 50,
+              height: 70,
               child: AdWidget(ad: banner!),
             ),
       backgroundColor: Colors.white,

@@ -21,11 +21,12 @@ List threedhis = [];
 class _ThreeDHistoryState extends State<ThreeDHistory> {
   BannerAd? banner;
 
-  void loadAds() {
-    banner = MMVIPAdMob.getBanner(
+  void loadAds() async {
+    banner = await MMVIPAdMob.getBanner(
       context,
-      height: 300,
-    )..load();
+      height: 100,
+    );
+    banner?.load();
   }
 
   @override
@@ -292,7 +293,7 @@ class _ThreeDAdsState extends State<ThreeDAds> {
             ? Container(
                 decoration:
                     BoxDecoration(borderRadius: BorderRadius.circular(10)),
-                height: 200,
+                height: 120,
                 child: Center(
                   child: Text('Google Ads Banner'),
                 ),
@@ -302,7 +303,7 @@ class _ThreeDAdsState extends State<ThreeDAds> {
                   border: Border.all(width: 1, color: Colors.white),
                 ),
                 width: double.infinity,
-                height: 280,
+                height: 120,
                 child: AdWidget(ad: widget.banner!),
               ),
       ),

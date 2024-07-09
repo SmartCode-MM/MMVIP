@@ -14,9 +14,12 @@ class Splash extends StatefulWidget {
 class _SplashState extends State<Splash> {
   AppOpenAd? appOpenAd;
   Future<void> loadAppOpenAd() async {
+    final box = await Hive.openBox('SettingData');
+    final settings = box.get('settings');
+    final adUnitId = settings['ads_unit_app_open'];
     await AppOpenAd.load(
       // adUnitId: "ca-app-pub-7704805724466083/5964065783",
-      adUnitId: "ca-app-pub-3940256099942544/9257395921", // test
+      adUnitId: adUnitId, // test
       // adUnitId: "ca-app-pub-3940256099942544/9257395921",
       // orientation: AppOpenAd.orientationPortrait,
       request: AdRequest(),

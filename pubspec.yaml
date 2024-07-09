@@ -41,14 +41,20 @@ dependencies:
   flutter_spinkit: ^5.2.1
   animated_text_kit: ^4.2.2
   pin_code_fields: ^8.0.1
+  font_awesome_flutter: ^10.7.0
   fluttertoast: ^8.2.4
   google_mobile_ads: ^5.0.0
   carousel_slider: ^4.2.1
   wakelock: ^0.6.2
   provider: ^6.0.5
+  chat_bubbles: ^1.5.0
+  cloud_firestore: ^4.17.3
+  
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   intl: ^0.18.1
+  flutter_html: ^3.0.0-beta.2
+  share_plus: ^6.3.4
   http: ^1.2.1
   flutter_i18n: ^0.34.0
   flutter_localizations:
@@ -56,10 +62,14 @@ dependencies:
     version: ^0.0.0
   firebase_core: ^2.30.1
   firebase_messaging: ^14.9.1
+  google_sign_in: ^6.2.1
+  firebase_auth: ^4.19.5
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -67,6 +77,9 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^3.0.0
+  icons_launcher: ^2.1.7
+
+  
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -108,3 +121,11 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+icons_launcher:
+  image_path: "lib/IMG/MMVIPLOGO.jpg"
+  platforms:
+    android:
+      enable: true
+    ios:
+      enable: true

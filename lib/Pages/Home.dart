@@ -7,14 +7,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:hive/hive.dart';
 import 'package:marquee/marquee.dart';
 import 'package:mmvip/Comp/API.dart';
 import 'package:mmvip/Comp/Admob.dart';
 import 'package:intl/intl.dart';
 import 'package:mmvip/Comp/livehandler.dart';
+import 'package:mmvip/Pages/LiveChat.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:mmvip/Provider/locale.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -35,8 +39,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   bool islive = true;
 
   createInterAd() async {
+    final box = await Hive.openBox('SettingData');
+    final settings = box.get('settings');
+    final adUnitId = settings['ads_unit_inter'];
     await InterstitialAd.load(
-      adUnitId: "ca-app-pub-3940256099942544/1033173712",
+      adUnitId: adUnitId,
       // adUnitId: "ca-app-pub-7546836867022515/5610805044",
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) {
@@ -167,11 +174,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     Wakelock.disable();
   }
 
-  void loadAds() {
-    banner = MMVIPAdMob.getBanner(
+  void loadAds() async {
+    banner = await MMVIPAdMob.getBanner(
       context,
-      height: 100,
-    )..load();
+      height: 50,
+    );
+    banner?.load();
   }
 
   DateTime dtime = DateTime.now();
@@ -320,10 +328,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                               padding: const EdgeInsets.symmetric(vertical: 3),
                               child: Row(
                                 children: [
-                                  Icon(
-                                    Icons.flag,
-                                    size: 30,
-                                    color: Color(0xff053b61),
+                                  Image.asset(
+                                    'lib/IMG/Thailand.jpg',
+                                    height: 30,
                                   ),
                                   SizedBox(
                                     width: 10,
@@ -344,10 +351,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           ),
                           GestureDetector(
                             onTap: () {
-                              t!.cancel();
-                              setState(() {
-                                isHidden = true;
-                              });
                               if (interAd == null) {
                                 print(interAd);
                                 Navigator.pushNamed(context, '/taiwan');
@@ -413,9 +416,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             color: Colors.grey,
                           ),
                           GestureDetector(
-                            onTap: () {
-                              launchUrl(Uri.parse(
-                                  'https://www.facebook.com/profile.php?id=100086530074833&mibextid=ZbWKwL'));
+                            onTap: () async {
+                              String FBLink = Hive.box("SettingData")
+                                  .get("settings")["facebook_link"];
+                              if (await canLaunchUrlString(FBLink)) {
+                                await launchUrlString(FBLink);
+                              } else {
+                                // Handle error if the URL can't be launched
+                                print('Could not launch $FBLink');
+                              }
                             },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 3),
@@ -443,8 +452,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             color: Colors.grey,
                           ),
                           GestureDetector(
-                            onTap: () {
-                              launchUrl(Uri.parse('https://t.me/MM2DVVIP'));
+                            onTap: () async {
+                              String teleLink = Hive.box("SettingData")
+                                  .get("settings")["telegram_link"];
+                              if (await canLaunchUrlString(teleLink)) {
+                                await launchUrlString(teleLink);
+                              } else {
+                                // Handle error if the URL can't be launched
+                                print('Could not launch $teleLink');
+                              }
                             },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 3),
@@ -472,7 +488,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             color: Colors.grey,
                           ),
                           GestureDetector(
-                            onTap: () {},
+                            onTap: () async {
+                              Share.share(Hive.box("SettingData")
+                                  .get("settings")["android_link"]);
+                            },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 3),
                               child: Row(
@@ -500,7 +519,16 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             color: Colors.grey,
                           ),
                           GestureDetector(
-                            onTap: () {},
+                            onTap: () async {
+                              String androidLink = Hive.box("SettingData")
+                                  .get("settings")["android_link"];
+                              if (await canLaunchUrlString(androidLink)) {
+                                await launchUrlString(androidLink);
+                              } else {
+                                // Handle error if the URL can't be launched
+                                print('Could not launch $androidLink');
+                              }
+                            },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 3),
                               child: Row(
@@ -528,7 +556,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             color: Colors.grey,
                           ),
                           GestureDetector(
-                            onTap: () {},
+                            onTap: () {
+                              t!.cancel();
+                              setState(() {
+                                isHidden = true;
+                              });
+                              Navigator.pushNamed(context, '/privacy');
+                            },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 3),
                               child: Row(
@@ -674,18 +708,27 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             : Container(
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Container(
-                        height: 20,
-                        child: Marquee(
-                          text:
-                              'အသုံးပြုရပိုမိုအဆင်ပြေစေရန် VPN ချိတ်ဆက်ထားပေးပါ။',
-                          blankSpace: 200,
-                          style: TextStyle(color: Colors.black, fontSize: 14),
-                        ),
-                      ),
-                    ),
+                    Hive.box("SettingData").get("settings")["banner_text"] ==
+                            null
+                        ? Container(
+                            height: 20,
+                            color: Color(0xff053b61),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Container(
+                              height: 20,
+                              child: Center(
+                                child: Marquee(
+                                  text: Hive.box("SettingData")
+                                      .get("settings")["banner_text"],
+                                  blankSpace: 200,
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 14),
+                                ),
+                              ),
+                            ),
+                          ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Container(
@@ -736,37 +779,68 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   islive
-                                      ? Container(
-                                          decoration: BoxDecoration(
-                                              color: Colors.red,
-                                              borderRadius:
-                                                  BorderRadius.circular(5)),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 2, horizontal: 5),
-                                            child: Text(
-                                              "Live",
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
+                                      ? Row(
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                  color: Colors.red,
+                                                  borderRadius:
+                                                      BorderRadius.circular(5)),
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 2,
+                                                        horizontal: 5),
+                                                child: Text(
+                                                  "Live",
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
                                               ),
                                             ),
-                                          ),
+                                            SizedBox(
+                                              width: 10,
+                                            ),
+                                            Text(
+                                              " " +
+                                                  DateFormat("MMM d y")
+                                                      .format(x) +
+                                                  " ",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            ClockTick()
+                                          ],
                                         )
-                                      : Icon(
-                                          Icons.check_circle_rounded,
-                                          size: 22,
-                                          color: Colors.green,
+                                      : Row(
+                                          children: [
+                                            Icon(
+                                              Icons.check_circle_rounded,
+                                              size: 22,
+                                              color: Colors.green,
+                                            ),
+                                            SizedBox(
+                                              width: 10,
+                                            ),
+                                            Text(
+                                              data.containsKey("updatetime") &&
+                                                      data["updatetime"] != null
+                                                  ? data["updatetime"]
+                                                      .toString()
+                                                  : "--",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            )
+                                          ],
                                         ),
-                                  Text(
-                                    " " + DateFormat("MMM d y").format(x) + " ",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  ClockTick()
                                 ],
                               ),
                             )
@@ -809,162 +883,166 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             ),
                           ),
                     HomeAds(banner: banner),
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(40),
-                          topRight: Radius.circular(40),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(40),
+                            topRight: Radius.circular(40),
+                          ),
+                          color: Color(0xff053b61),
                         ),
-                        color: Color(0xff053b61),
-                      ),
-                      // height: MediaQuery.of(context).size.height * 0.095,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                  onTap: () {
-                                    t!.cancel();
-                                    setState(() {
-                                      isHidden = true;
-                                    });
-                                    if (interAd == null) {
-                                      print(interAd);
-                                      Navigator.pushNamed(context, '/taiwan');
-                                    } else {
-                                      showInter(() {
+                        // height: MediaQuery.of(context).size.height * 0.095,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                    onTap: () {
+                                      if (interAd == null) {
+                                        print(interAd);
                                         Navigator.pushNamed(context, '/taiwan');
-                                      });
-                                    }
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(100),
-                                            color: Colors.white),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Image.asset(
-                                            'lib/IMG/Taiwan.png',
-                                            height: 30,
+                                      } else {
+                                        showInter(() {
+                                          Navigator.pushNamed(
+                                              context, '/taiwan');
+                                        });
+                                      }
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
+                                              color: Colors.white),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(10),
+                                            child: Image.asset(
+                                              'lib/IMG/Taiwan.png',
+                                              height: 30,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  )),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                  onTap: () {
-                                    t!.cancel();
-                                    setState(() {
-                                      isHidden = true;
-                                    });
-                                    Navigator.pushNamed(context, '/threeDhis');
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(100),
-                                            color: Colors.white),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Image.asset(
-                                            'lib/IMG/3D.png',
-                                            height: 30,
+                                      ],
+                                    )),
+                              ),
+                              Expanded(
+                                child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.pushNamed(
+                                          context, '/threeDhis');
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
+                                              color: Colors.white),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(10),
+                                            child: Image.asset(
+                                              'lib/IMG/3D.png',
+                                              height: 30,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  )),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                  onTap: () {
-                                    t!.cancel();
-                                    setState(() {
-                                      isHidden = true;
-                                    });
-
-                                    Navigator.pushNamed(context, '/gift');
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Image.asset(
-                                        'lib/IMG/giftbox.png',
-                                        height: 40,
-                                      ),
-                                    ],
-                                  )),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                  onTap: () {
-                                    t!.cancel();
-                                    setState(() {
-                                      isHidden = true;
-                                    });
-                                    if (interAd == null) {
-                                      print(interAd);
-                                      Navigator.pushNamed(context, '/twoDhis');
-                                    } else {
-                                      showInter(() {
+                                      ],
+                                    )),
+                              ),
+                              Expanded(
+                                child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.pushNamed(context, '/gift');
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Image.asset(
+                                          'lib/IMG/giftbox.png',
+                                          height: 40,
+                                        ),
+                                      ],
+                                    )),
+                              ),
+                              Expanded(
+                                child: GestureDetector(
+                                    onTap: () {
+                                      if (interAd == null) {
+                                        print(interAd);
                                         Navigator.pushNamed(
                                             context, '/twoDhis');
-                                      });
-                                    }
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(100),
-                                            color: Colors.white),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Image.asset(
-                                            'lib/IMG/calendar.png',
-                                            height: 30,
+                                      } else {
+                                        showInter(() {
+                                          Navigator.pushNamed(
+                                              context, '/twoDhis');
+                                        });
+                                      }
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
+                                              color: Colors.white),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(10),
+                                            child: Image.asset(
+                                              'lib/IMG/calendar.png',
+                                              height: 30,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  )),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                  onTap: () {
-                                    t!.cancel();
-                                    setState(() {
-                                      isHidden = true;
-                                    });
-                                    Navigator.pushNamed(context, '/livechat');
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(100),
-                                            color: Colors.white),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Image.asset(
-                                            'lib/IMG/live-chat.png',
-                                            height: 30,
+                                      ],
+                                    )),
+                              ),
+                              Expanded(
+                                child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => LiveChat(
+                                            liveData: data.isEmpty
+                                                ? ""
+                                                : data["live"],
+                                            number1: data["12:01 PM"][0]
+                                                ["number"],
+                                            set1: data["12:01 PM"][0]["set"],
+                                            value1: data["12:01 PM"][0]
+                                                ["value"],
+                                            number2: data["04:30 PM"][0]
+                                                ["number"],
+                                            set2: data["04:30 PM"][0]["set"],
+                                            value2: data["04:30 PM"][0]
+                                                ["value"],
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  )),
-                            ),
-                          ],
+                                      );
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
+                                              color: Colors.white),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(10),
+                                            child: Image.asset(
+                                              'lib/IMG/live-chat.png',
+                                              height: 30,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    )),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     )
@@ -999,7 +1077,7 @@ class _HomeAdsState extends State<HomeAds> {
             ? Container(
                 decoration:
                     BoxDecoration(borderRadius: BorderRadius.circular(10)),
-                height: 200,
+                height: 50,
                 child: Center(
                   child: Text('Google Ads Banner'),
                 ),
@@ -1009,7 +1087,7 @@ class _HomeAdsState extends State<HomeAds> {
                   border: Border.all(width: 1, color: Colors.white),
                 ),
                 width: double.infinity,
-                height: 120,
+                height: 70,
                 child: AdWidget(ad: widget.banner!),
               ),
       ),
