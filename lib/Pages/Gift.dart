@@ -208,10 +208,7 @@ class _GiftState extends State<Gift> {
                                   if (data.isNotEmpty)
                                     ...data
                                         .map((e) => GiftBox(
-                                              title: e["name"]
-                                                  .toString()
-                                                  .split('\n')
-                                                  .join('\n'),
+                                              title: e["name"],
                                               id: e["id"].toString(),
                                               ad: e["ad_type"],
                                             ))

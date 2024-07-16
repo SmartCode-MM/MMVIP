@@ -5,7 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hive/hive.dart';
 import 'package:mmvip/Comp/API.dart';
 import 'package:mmvip/Pages/ChatDetails.dart';
 
@@ -43,10 +45,50 @@ class _LiveChatState extends State<LiveChat> {
   String _set2 = '';
   String _value2 = '';
 
+  InterstitialAd? interAd;
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
   bool _isSigningIn = false;
   String? _errorMessage;
+
+  createInterAd() async {
+    final box = await Hive.openBox('SettingData');
+    final settings = box.get('settings');
+    final adUnitId = settings['ads_unit_inter'];
+    await InterstitialAd.load(
+      adUnitId: adUnitId,
+      // adUnitId: "ca-app-pub-7546836867022515/5610805044",
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) {
+        interAd = ad;
+      }, onAdFailedToLoad: (err) {
+        print(err);
+        interAd = null;
+      }),
+    );
+  }
+
+  void showInter(Function after) {
+    print(interAd);
+    if (interAd != null) {
+      interAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          createInterAd();
+          after();
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          print(error);
+          ad.dispose();
+          createInterAd();
+          after();
+        },
+      );
+      interAd!.show();
+      interAd = null;
+    }
+  }
 
   @override
   void initState() {
@@ -56,10 +98,14 @@ class _LiveChatState extends State<LiveChat> {
       _checkIfUserIsSignedIn();
     });
     _startTimer();
+    createInterAd();
   }
 
   @override
   void dispose() {
+    if (interAd != null) {
+      interAd!.dispose();
+    }
     _timer.cancel();
     super.dispose();
   }

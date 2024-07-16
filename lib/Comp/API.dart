@@ -140,17 +140,25 @@ class API {
     return json.decode(response.body);
   }
 
-  static Future<List> getPresents() async {
+  static Future<List<Map<String, dynamic>>> getPresents() async {
     final url = Uri.parse('https://mmvip.smartcodemm.com/api/presents');
 
-    List data = [];
+    List<Map<String, dynamic>> data = [];
 
     try {
       http.Response res = await http.get(url);
-      print(res.body);
-      data.addAll(jsonDecode(res.body));
+      if (res.statusCode == 200) {
+        List<dynamic> jsonData = jsonDecode(res.body);
+        data = jsonData.map((item) {
+          item['name'] = item['name'].replaceAll('\\n', '\n');
+          return Map<String, dynamic>.from(item);
+        }).toList();
+        print('Data fetched and processed: $data');
+      } else {
+        print('Failed to load data: ${res.statusCode}');
+      }
     } catch (e) {
-      print(e);
+      print('Error occurred: $e');
     }
 
     return data;

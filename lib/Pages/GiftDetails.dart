@@ -64,10 +64,12 @@ class _PresentDetailState extends State<PresentDetail> {
               color: Colors.white, borderRadius: BorderRadius.circular(16)),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              content,
-              fit: BoxFit.cover,
-            ),
+            child: content != null
+                ? Image.network(
+                    content,
+                    fit: BoxFit.cover,
+                  )
+                : Container(), // or a placeholder widget of your choice
           ),
         ),
       );
@@ -96,7 +98,14 @@ class _PresentDetailState extends State<PresentDetail> {
     if (banner == null) {
       loadAds();
     }
+
     final List args = ModalRoute.of(context)!.settings.arguments as List;
+
+    // Remove any newline characters and trim whitespace from the title
+    String title = args[0].replaceAll('\n', ' ').trim();
+
+    print('Title: $title'); // Debug print to check the title
+
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: banner == null
@@ -119,7 +128,7 @@ class _PresentDetailState extends State<PresentDetail> {
       appBar: AppBar(
         backgroundColor: Color(0xff053b61),
         title: Text(
-          args[0],
+          title,
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,

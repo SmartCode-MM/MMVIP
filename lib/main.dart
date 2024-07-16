@@ -105,7 +105,7 @@ class MyApp extends StatelessWidget {
               "/holiday": (context) => const Holiday(),
 
               "/thailand": (context) => const THLottery(),
-              "/presentDetail": (context) => const PresentDetail(),
+              "/presentDetail": (context) => PresentDetail(),
               "/privacy": (context) => const Privacy(),
 
               // "/2Ddetailspage": (context) => const TwoDDetails(),

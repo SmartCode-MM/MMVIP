@@ -106,7 +106,7 @@ class _ChatDetailsState extends State<ChatDetails> {
               now.weekday != 7)) {
         islive = true;
 
-        if (!_dataUpdateTimer!.isActive) {
+        if (_dataUpdateTimer == null || !_dataUpdateTimer!.isActive) {
           _dataUpdateTimer =
               Timer.periodic(const Duration(seconds: 1), (timer) async {
             data = await API.getmainapi();
@@ -122,19 +122,11 @@ class _ChatDetailsState extends State<ChatDetails> {
         }
       } else {
         islive = false;
-        setState(() {});
-        // Future.delayed(Duration.zero, () async {
-        //   dt2 = await API.get2DXD();
-        //   TempLiveData.setTempLiveData(dt2);
-        //   TempLiveData.setApiCallTime(DateTime.now());
-        //   if (mounted) {
-        //     setState(() {
-        //       dt2 = dt2;
-        //       x = DateTime.now();
-        //     });
-        //   }
-        // });
-        if (_dataUpdateTimer!.isActive) {
+        if (mounted) {
+          setState(() {});
+        }
+
+        if (_dataUpdateTimer != null && _dataUpdateTimer!.isActive) {
           _dataUpdateTimer!.cancel();
         }
       }
